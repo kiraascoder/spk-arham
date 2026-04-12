@@ -222,7 +222,35 @@
             </div>
 
             <div class="content">
-                @yield('content')
+                <div class="content">
+
+                    @if (session('success'))
+                        <div
+                            style="margin-bottom: 20px; padding: 12px 16px; background: #dcfce7; color: #166534; border-radius: 10px;">
+                            {{ session('success') }}
+                        </div>
+                    @endif
+
+                    @if (session('error'))
+                        <div
+                            style="margin-bottom: 20px; padding: 12px 16px; background: #fee2e2; color: #991b1b; border-radius: 10px;">
+                            {{ session('error') }}
+                        </div>
+                    @endif
+
+                    @if ($errors->any())
+                        <div
+                            style="margin-bottom: 20px; padding: 12px 16px; background: #fee2e2; color: #991b1b; border-radius: 10px;">
+                            <ul style="padding-left: 18px;">
+                                @foreach ($errors->all() as $error)
+                                    <li style="margin-bottom: 4px;">{{ $error }}</li>
+                                @endforeach
+                            </ul>
+                        </div>
+                    @endif
+
+                    @yield('content')
+                </div>
             </div>
         </div>
     </div>

@@ -10,13 +10,17 @@
         <div class="card">
             <h3>Total Klasifikasi</h3>
             <p>Jumlah klasifikasi yang pernah Anda lakukan.</p>
-            <strong>12</strong>
+            <strong>{{ $totalClassifications }}</strong>
         </div>
 
         <div class="card">
             <h3>Hasil Terakhir</h3>
             <p>Status klasifikasi terakhir Anda.</p>
-            <span class="badge">Unggul</span>
+            @if ($lastClassification)
+                <span class="badge">{{ strtoupper($lastClassification->predicted_class) }}</span>
+            @else
+                <span class="small-text">Belum ada data</span>
+            @endif
         </div>
     </div>
 @endsection

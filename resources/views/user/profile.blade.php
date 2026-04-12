@@ -6,17 +6,17 @@
 
         <div class="form-group">
             <label class="form-label">Nama</label>
-            <input type="text" class="form-control" value="Arham" readonly>
+            <input type="text" class="form-control" value="{{ auth()->user()->name }}" readonly>
         </div>
 
         <div class="form-group">
             <label class="form-label">Email</label>
-            <input type="email" class="form-control" value="arham@mail.com" readonly>
+            <input type="email" class="form-control" value="{{ auth()->user()->email }}" readonly>
         </div>
 
         <div class="form-group">
             <label class="form-label">Role</label>
-            <input type="text" class="form-control" value="User" readonly>
+            <input type="text" class="form-control" value="{{ ucfirst(auth()->user()->role) }}" readonly>
         </div>
     </div>
 @endsection
