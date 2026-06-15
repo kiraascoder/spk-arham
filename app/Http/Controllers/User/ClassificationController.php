@@ -81,24 +81,24 @@ class ClassificationController extends Controller
     }
     public function downloadPdf($id)
     {
-        $classification = Classification::with('details.criterion', 'user')->findOrFail($id);
+        $classification = \App\Models\Classification::with('details.criterion', 'user')->findOrFail($id);
 
-        if ($classification->user_id !== Auth::id()) {
+        if ($classification->user_id !== auth()->id()) {
             abort(403, 'Anda tidak memiliki akses ke file ini.');
         }
 
-        $pdf = Pdf::loadView('user.classification.pdf', [
+        $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('user.classification.pdf', [
             'classification' => $classification,
+        ])->setPaper('a4', 'portrait');
+
+        $pdf->setOptions([
+            'defaultFont' => 'Helvetica',
+            'isHtml5ParserEnabled' => true,
+            'isRemoteEnabled' => false,
+            'isFontSubsettingEnabled' => false,
         ]);
 
         $fileName = $classification->classification_code . '.pdf';
-        $filePath = 'reports/' . $fileName;
-
-        Storage::disk('public')->put($filePath, $pdf->output());
-
-        $classification->update([
-            'pdf_path' => $filePath,
-        ]);
 
         return $pdf->download($fileName);
     }

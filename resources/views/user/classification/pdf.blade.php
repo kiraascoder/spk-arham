@@ -6,20 +6,34 @@
     <title>Laporan Hasil Klasifikasi</title>
     <style>
         body {
-            font-family: DejaVu Sans, sans-serif;
+            font-family: Helvetica, Arial, sans-serif;
             font-size: 12px;
             color: #222;
+            line-height: 1.5;
         }
 
         h1,
         h2,
-        h3 {
-            margin: 0 0 10px 0;
+        h3,
+        h4,
+        p {
+            margin: 0;
+            padding: 0;
         }
 
         .header {
             text-align: center;
-            margin-bottom: 25px;
+            margin-bottom: 20px;
+        }
+
+        .header h2 {
+            font-size: 18px;
+            margin-bottom: 5px;
+        }
+
+        .header h3 {
+            font-size: 14px;
+            font-weight: bold;
         }
 
         .box {
@@ -30,29 +44,43 @@
             font-weight: bold;
         }
 
+        .result-box {
+            border: 1px solid #999;
+            padding: 10px;
+            margin-top: 10px;
+        }
+
         table {
             width: 100%;
             border-collapse: collapse;
             margin-top: 10px;
+            table-layout: fixed;
         }
 
         table th,
         table td {
             border: 1px solid #999;
-            padding: 8px;
+            padding: 6px;
             text-align: left;
             vertical-align: top;
+            word-wrap: break-word;
         }
 
         table th {
             background: #f2f2f2;
+            font-weight: bold;
         }
 
-        .result {
-            padding: 10px;
-            background: #e8f5e9;
-            border: 1px solid #81c784;
+        .mt-10 {
             margin-top: 10px;
+        }
+
+        .mt-20 {
+            margin-top: 20px;
+        }
+
+        .page-break {
+            page-break-before: always;
         }
     </style>
 </head>
@@ -75,9 +103,9 @@
         <table>
             <thead>
                 <tr>
-                    <th>No</th>
-                    <th>Kriteria</th>
-                    <th>Nilai Input</th>
+                    <th style="width: 8%;">No</th>
+                    <th style="width: 42%;">Kriteria</th>
+                    <th style="width: 50%;">Nilai Input</th>
                 </tr>
             </thead>
             <tbody>
@@ -94,8 +122,9 @@
 
     <div class="box">
         <h3>Hasil Klasifikasi</h3>
-        <div class="result">
-            <p><span class="label">Prediksi:</span> {{ strtoupper($classification->predicted_class) }}</p>
+        <div class="result-box">
+            <p><span class="label">Prediksi:</span>
+                {{ strtoupper(str_replace('_', ' ', $classification->predicted_class)) }}</p>
             <p><span class="label">Probabilitas Unggul:</span> {{ $classification->probability_unggul }}</p>
             <p><span class="label">Probabilitas Tidak Unggul:</span> {{ $classification->probability_tidak_unggul }}
             </p>
@@ -106,41 +135,44 @@
         <h3>Detail Perhitungan</h3>
 
         @foreach ($classification->calculation_details as $className => $detailClass)
-            <h4>Kelas: {{ strtoupper($className) }}</h4>
-            <p>
-                Prior = {{ $detailClass['prior_formula'] ?? '-' }}
-                = {{ $detailClass['prior'] ?? 0 }}
-            </p>
+            <div class="mt-20">
+                <h4>Kelas: {{ strtoupper(str_replace('_', ' ', $className)) }}</h4>
+                <p class="mt-10">
+                    <span class="label">Prior:</span>
+                    {{ $detailClass['prior_formula'] ?? '-' }}
+                    = {{ $detailClass['prior'] ?? 0 }}
+                </p>
 
-            <table>
-                <thead>
-                    <tr>
-                        <th>Kriteria</th>
-                        <th>Input</th>
-                        <th>Jumlah Cocok</th>
-                        <th>Jumlah Data Kelas</th>
-                        <th>Jumlah Opsi</th>
-                        <th>Likelihood</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach ($detailClass['attributes'] ?? [] as $attribute)
+                <table>
+                    <thead>
                         <tr>
-                            <td>{{ $attribute['criterion_name'] }}</td>
-                            <td>{{ $attribute['input_value'] }}</td>
-                            <td>{{ $attribute['match_count'] }}</td>
-                            <td>{{ $attribute['class_count'] }}</td>
-                            <td>{{ $attribute['option_count'] }}</td>
-                            <td>{{ $attribute['formula'] }} = {{ $attribute['likelihood'] }}</td>
+                            <th style="width: 18%;">Kriteria</th>
+                            <th style="width: 16%;">Input</th>
+                            <th style="width: 12%;">Jumlah Cocok</th>
+                            <th style="width: 16%;">Jumlah Data Kelas</th>
+                            <th style="width: 12%;">Jumlah Opsi</th>
+                            <th style="width: 26%;">Likelihood</th>
                         </tr>
-                    @endforeach
-                </tbody>
-            </table>
+                    </thead>
+                    <tbody>
+                        @foreach ($detailClass['attributes'] ?? [] as $attribute)
+                            <tr>
+                                <td>{{ $attribute['criterion_name'] }}</td>
+                                <td>{{ $attribute['input_value'] }}</td>
+                                <td>{{ $attribute['match_count'] }}</td>
+                                <td>{{ $attribute['class_count'] }}</td>
+                                <td>{{ $attribute['option_count'] }}</td>
+                                <td>{{ $attribute['formula'] }} = {{ $attribute['likelihood'] }}</td>
+                            </tr>
+                        @endforeach
+                    </tbody>
+                </table>
 
-            <p style="margin-top: 8px;">
-                <span class="label">Posterior {{ strtoupper($className) }}:</span>
-                {{ $detailClass['posterior'] ?? 0 }}
-            </p>
+                <p class="mt-10">
+                    <span class="label">Posterior {{ strtoupper(str_replace('_', ' ', $className)) }}:</span>
+                    {{ $detailClass['posterior'] ?? 0 }}
+                </p>
+            </div>
         @endforeach
     </div>
 </body>
