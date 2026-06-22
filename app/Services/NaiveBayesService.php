@@ -9,7 +9,7 @@ class NaiveBayesService
 {
     public function classify(array $inputData): array
     {
-        $trainingSamples = TrainingSample::with('details', 'details.criterion')->get();
+        $trainingSamples = TrainingSample::with('details')->get();
 
         if ($trainingSamples->isEmpty()) {
             return [
@@ -23,7 +23,7 @@ class NaiveBayesService
         $classes = ['unggul', 'tidak_unggul'];
         $totalSamples = $trainingSamples->count();
 
-        $results = [];
+        $logResults = [];
         $calculationDetails = [];
 
         foreach ($classes as $class) {
@@ -31,71 +31,126 @@ class NaiveBayesService
             $classCount = $classSamples->count();
 
             if ($classCount === 0) {
-                $results[$class] = 0;
+                $logResults[$class] = log(1e-300);
                 $calculationDetails[$class] = [
                     'prior' => 0,
-                    'attributes' => [],
                     'posterior' => 0,
-                    'class_count' => 0,
+                    'attributes' => [],
                 ];
                 continue;
             }
 
             $prior = $classCount / $totalSamples;
-            $posterior = $prior;
-
+            $logPosterior = log($prior);
             $attributeDetails = [];
 
             foreach ($inputData as $criterionId => $inputValue) {
-                $matchCount = 0;
+                $values = [];
 
                 foreach ($classSamples as $sample) {
                     $detail = $sample->details->firstWhere('criterion_id', (int) $criterionId);
 
-                    if ($detail && strtolower(trim($detail->option_value)) === strtolower(trim($inputValue))) {
-                        $matchCount++;
+                    if ($detail && $detail->numeric_value !== null) {
+                        $values[] = (float) $detail->numeric_value;
                     }
                 }
 
-                $criterion = Criterion::with('options')->find($criterionId);
+                $criterion = Criterion::find($criterionId);
                 $criterionName = $criterion ? $criterion->name : 'Kriteria';
-                $optionCount = $criterion ? max($criterion->options->count(), 1) : 1;
 
-                // Laplace smoothing
-                $likelihood = ($matchCount + 1) / ($classCount + $optionCount);
-                $posterior *= $likelihood;
+                $mean = $this->mean($values);
+                $variance = $this->variance($values, $mean);
+
+                if ($variance <= 0) {
+                    $variance = 1e-6;
+                }
+
+                $density = $this->gaussianPdf((float) $inputValue, $mean, $variance);
+                $density = max($density, 1e-300);
+
+                $logPosterior += log($density);
 
                 $attributeDetails[] = [
                     'criterion_id' => $criterionId,
                     'criterion_name' => $criterionName,
-                    'input_value' => $inputValue,
-                    'match_count' => $matchCount,
-                    'class_count' => $classCount,
-                    'option_count' => $optionCount,
-                    'likelihood' => $likelihood,
-                    'formula' => '(' . $matchCount . ' + 1) / (' . $classCount . ' + ' . $optionCount . ')',
+                    'input_value' => (float) $inputValue,
+                    'mean' => $mean,
+                    'variance' => $variance,
+                    'density' => $density,
                 ];
             }
 
-            $results[$class] = $posterior;
+            $logResults[$class] = $logPosterior;
 
             $calculationDetails[$class] = [
                 'prior' => $prior,
+                'log_posterior' => $logPosterior,
                 'attributes' => $attributeDetails,
-                'posterior' => $posterior,
-                'class_count' => $classCount,
-                'total_samples' => $totalSamples,
-                'prior_formula' => $classCount . ' / ' . $totalSamples,
             ];
         }
 
-        $predictedClass = ($results['unggul'] >= $results['tidak_unggul']) ? 'unggul' : 'tidak_unggul';
+        $probabilities = $this->softmax($logResults);
+
+        $predictedClass = ($probabilities['unggul'] >= $probabilities['tidak_unggul'])
+            ? 'unggul'
+            : 'tidak_unggul';
+
+        $calculationDetails['unggul']['posterior'] = $probabilities['unggul'];
+        $calculationDetails['tidak_unggul']['posterior'] = $probabilities['tidak_unggul'];
 
         return [
             'predicted_class' => $predictedClass,
-            'probability_unggul' => $results['unggul'],
-            'probability_tidak_unggul' => $results['tidak_unggul'],
+            'probability_unggul' => $probabilities['unggul'],
+            'probability_tidak_unggul' => $probabilities['tidak_unggul'],
             'calculation_details' => $calculationDetails,
+        ];
+    }
+
+    private function mean(array $values): float
+    {
+        if (count($values) === 0) {
+            return 0;
+        }
+
+        return array_sum($values) / count($values);
+    }
+
+    private function variance(array $values, float $mean): float
+    {
+        if (count($values) === 0) {
+            return 1e-6;
+        }
+
+        $sum = 0;
+        foreach ($values as $value) {
+            $sum += pow($value - $mean, 2);
+        }
+
+        return $sum / count($values);
+    }
+
+    private function gaussianPdf(float $x, float $mean, float $variance): float
+    {
+        $coefficient = 1 / sqrt(2 * pi() * $variance);
+        $exponent = exp(-pow($x - $mean, 2) / (2 * $variance));
+
+        return $coefficient * $exponent;
+    }
+
+    private function softmax(array $logValues): array
+    {
+        $maxLog = max($logValues);
+        $expValues = [];
+
+        foreach ($logValues as $class => $value) {
+            $expValues[$class] = exp($value - $maxLog);
+        }
+
+        $sumExp = array_sum($expValues);
+
+        return [
+            'unggul' => $expValues['unggul'] / $sumExp,
+            'tidak_unggul' => $expValues['tidak_unggul'] / $sumExp,
         ];
     }
 }

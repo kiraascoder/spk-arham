@@ -33,7 +33,7 @@ class ClassificationController extends Controller
     {
         $request->validate([
             'criteria' => 'required|array',
-            'criteria.*' => 'required|string',
+            'criteria.*' => 'required|numeric',
         ]);
 
         $result = $this->naiveBayesService->classify($request->criteria);
@@ -53,10 +53,10 @@ class ClassificationController extends Controller
                     'classification_id' => $classification->id,
                     'criterion_id' => $criterionId,
                     'input_value' => $value,
-                    'normalized_value' => strtolower(str_replace(' ', '_', $value)),
+                    'numeric_value' => $value,
+                    'normalized_value' => null,
                 ]);
             }
-
             return $classification;
         });
 

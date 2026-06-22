@@ -11,7 +11,6 @@ class DatabaseSeeder extends Seeder
         $this->call([
             UserSeeder::class,
             CriterionSeeder::class,
-            CriterionOptionSeeder::class,
             TrainingSampleSeeder::class,
         ]);
     }

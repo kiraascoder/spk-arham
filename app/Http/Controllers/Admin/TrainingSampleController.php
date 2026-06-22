@@ -31,7 +31,7 @@ class TrainingSampleController extends Controller
             'sample_code' => 'required|string|max:50|unique:training_samples,sample_code',
             'class_label' => 'required|in:unggul,tidak_unggul',
             'criteria' => 'required|array',
-            'criteria.*' => 'required|string',
+            'criteria.*' => 'required|numeric',
         ]);
 
         DB::transaction(function () use ($request) {
@@ -46,8 +46,9 @@ class TrainingSampleController extends Controller
                 TrainingSampleDetail::create([
                     'training_sample_id' => $sample->id,
                     'criterion_id' => $criterionId,
-                    'option_value' => $value,
-                    'normalized_value' => strtolower(str_replace(' ', '_', $value)),
+                    'option_value' => null,
+                    'numeric_value' => $value,
+                    'normalized_value' => null,
                 ]);
             }
         });
@@ -60,7 +61,7 @@ class TrainingSampleController extends Controller
         $criteria = Criterion::with('options')->get();
         $trainingSample->load('details');
 
-        $detailMap = $trainingSample->details->pluck('option_value', 'criterion_id');
+        $detailMap = $trainingSample->details->pluck('numeric_value', 'criterion_id');
 
         return view('admin.training.edit', compact('trainingSample', 'criteria', 'detailMap'));
     }
@@ -71,7 +72,7 @@ class TrainingSampleController extends Controller
             'sample_code' => 'required|string|max:50|unique:training_samples,sample_code,' . $trainingSample->id,
             'class_label' => 'required|in:unggul,tidak_unggul',
             'criteria' => 'required|array',
-            'criteria.*' => 'required|string',
+            'criteria.*' => 'required|numeric',
         ]);
 
         DB::transaction(function () use ($request, $trainingSample) {
@@ -87,8 +88,9 @@ class TrainingSampleController extends Controller
                 TrainingSampleDetail::create([
                     'training_sample_id' => $trainingSample->id,
                     'criterion_id' => $criterionId,
-                    'option_value' => $value,
-                    'normalized_value' => strtolower(str_replace(' ', '_', $value)),
+                    'option_value' => null,
+                    'numeric_value' => $value,
+                    'normalized_value' => null,
                 ]);
             }
         });

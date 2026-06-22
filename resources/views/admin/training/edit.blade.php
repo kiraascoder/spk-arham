@@ -28,15 +28,8 @@
             @foreach ($criteria as $criterion)
                 <div class="form-group">
                     <label class="form-label">{{ $criterion->name }}</label>
-                    <select name="criteria[{{ $criterion->id }}]" class="form-control">
-                        <option value="">-- Pilih {{ $criterion->name }} --</option>
-                        @foreach ($criterion->options as $option)
-                            <option value="{{ $option->option_label }}"
-                                {{ old('criteria.' . $criterion->id, $detailMap[$criterion->id] ?? '') == $option->option_label ? 'selected' : '' }}>
-                                {{ $option->option_label }}
-                            </option>
-                        @endforeach
-                    </select>
+                    <input type="number" step="0.01" name="criteria[{{ $criterion->id }}]" class="form-control"
+                        value="{{ old('criteria.' . $criterion->id, $detailMap[$criterion->id] ?? '') }}">
                 </div>
             @endforeach
 
@@ -46,8 +39,6 @@
             </div>
 
             <button type="submit" class="btn btn-primary">Update</button>
-            <a href="{{ route('admin.training.index') }}" class="btn"
-                style="margin-left:8px; border:1px solid #ccc;">Kembali</a>
         </form>
     </div>
 @endsection

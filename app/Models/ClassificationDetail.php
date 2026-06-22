@@ -13,7 +13,12 @@ class ClassificationDetail extends Model
         'classification_id',
         'criterion_id',
         'input_value',
+        'numeric_value',
         'normalized_value',
+    ];
+
+    protected $casts = [
+        'numeric_value' => 'decimal:4',
     ];
 
     public function classification()

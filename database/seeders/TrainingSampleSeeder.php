@@ -18,60 +18,60 @@ class TrainingSampleSeeder extends Seeder
                 'sample_code' => 'S001',
                 'class_label' => 'unggul',
                 'details' => [
-                    'warna_daun' => 'Hijau Tua',
-                    'tinggi_tanaman' => 'Tinggi',
-                    'jumlah_daun' => 'Banyak',
-                    'ketahanan_hama' => 'Tinggi',
+                    'tinggi_tanaman_cm' => 14.2,
+                    'jumlah_daun' => 6,
+                    'panjang_daun_cm' => 6.5,
+                    'persentase_serangan_hama' => 5,
                 ],
             ],
             [
                 'sample_code' => 'S002',
                 'class_label' => 'unggul',
                 'details' => [
-                    'warna_daun' => 'Hijau',
-                    'tinggi_tanaman' => 'Tinggi',
-                    'jumlah_daun' => 'Banyak',
-                    'ketahanan_hama' => 'Sedang',
+                    'tinggi_tanaman_cm' => 13.8,
+                    'jumlah_daun' => 5,
+                    'panjang_daun_cm' => 6.2,
+                    'persentase_serangan_hama' => 8,
                 ],
             ],
             [
                 'sample_code' => 'S003',
                 'class_label' => 'unggul',
                 'details' => [
-                    'warna_daun' => 'Hijau Tua',
-                    'tinggi_tanaman' => 'Sedang',
-                    'jumlah_daun' => 'Banyak',
-                    'ketahanan_hama' => 'Tinggi',
+                    'tinggi_tanaman_cm' => 12.9,
+                    'jumlah_daun' => 5,
+                    'panjang_daun_cm' => 5.9,
+                    'persentase_serangan_hama' => 10,
                 ],
             ],
             [
                 'sample_code' => 'S004',
                 'class_label' => 'tidak_unggul',
                 'details' => [
-                    'warna_daun' => 'Hijau Muda',
-                    'tinggi_tanaman' => 'Pendek',
-                    'jumlah_daun' => 'Sedikit',
-                    'ketahanan_hama' => 'Rendah',
+                    'tinggi_tanaman_cm' => 10.1,
+                    'jumlah_daun' => 4,
+                    'panjang_daun_cm' => 4.8,
+                    'persentase_serangan_hama' => 25,
                 ],
             ],
             [
                 'sample_code' => 'S005',
                 'class_label' => 'tidak_unggul',
                 'details' => [
-                    'warna_daun' => 'Hijau Muda',
-                    'tinggi_tanaman' => 'Sedang',
-                    'jumlah_daun' => 'Sedikit',
-                    'ketahanan_hama' => 'Rendah',
+                    'tinggi_tanaman_cm' => 9.7,
+                    'jumlah_daun' => 3,
+                    'panjang_daun_cm' => 4.5,
+                    'persentase_serangan_hama' => 30,
                 ],
             ],
             [
                 'sample_code' => 'S006',
                 'class_label' => 'tidak_unggul',
                 'details' => [
-                    'warna_daun' => 'Hijau',
-                    'tinggi_tanaman' => 'Pendek',
-                    'jumlah_daun' => 'Sedikit',
-                    'ketahanan_hama' => 'Sedang',
+                    'tinggi_tanaman_cm' => 10.5,
+                    'jumlah_daun' => 4,
+                    'panjang_daun_cm' => 5.0,
+                    'persentase_serangan_hama' => 22,
                 ],
             ],
         ];
@@ -81,8 +81,8 @@ class TrainingSampleSeeder extends Seeder
                 ['sample_code' => $sampleData['sample_code']],
                 [
                     'class_label' => $sampleData['class_label'],
-                    'source_data' => 'Seeder',
-                    'notes' => 'Data awal training sample',
+                    'source_data' => 'Seeder Gaussian',
+                    'notes' => 'Data training Gaussian Naive Bayes',
                 ]
             );
 
@@ -97,8 +97,9 @@ class TrainingSampleSeeder extends Seeder
                         'criterion_id' => $criteria[$criterionCode],
                     ],
                     [
-                        'option_value' => $value,
-                        'normalized_value' => strtolower(str_replace(' ', '_', $value)),
+                        'option_value' => null,
+                        'numeric_value' => $value,
+                        'normalized_value' => null,
                     ]
                 );
             }

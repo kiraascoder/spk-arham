@@ -88,7 +88,7 @@
 <body>
     <div class="header">
         <h2>Sistem Pemilihan Bibit Unggul Tanaman Kangkung</h2>
-        <h3>Laporan Hasil Klasifikasi</h3>
+        <h3>Laporan Hasil Klasifikasi Gaussian Naive Bayes</h3>
     </div>
 
     <div class="box">
@@ -113,7 +113,7 @@
                     <tr>
                         <td>{{ $loop->iteration }}</td>
                         <td>{{ $detail->criterion->name }}</td>
-                        <td>{{ $detail->input_value }}</td>
+                        <td>{{ $detail->numeric_value ?? $detail->input_value }}</td>
                     </tr>
                 @endforeach
             </tbody>
@@ -132,26 +132,24 @@
     </div>
 
     <div class="box">
-        <h3>Detail Perhitungan</h3>
+        <h3>Detail Perhitungan Gaussian Naive Bayes</h3>
 
         @foreach ($classification->calculation_details as $className => $detailClass)
             <div class="mt-20">
                 <h4>Kelas: {{ strtoupper(str_replace('_', ' ', $className)) }}</h4>
                 <p class="mt-10">
                     <span class="label">Prior:</span>
-                    {{ $detailClass['prior_formula'] ?? '-' }}
-                    = {{ $detailClass['prior'] ?? 0 }}
+                    {{ $detailClass['prior'] ?? 0 }}
                 </p>
 
                 <table>
                     <thead>
                         <tr>
-                            <th style="width: 18%;">Kriteria</th>
-                            <th style="width: 16%;">Input</th>
-                            <th style="width: 12%;">Jumlah Cocok</th>
-                            <th style="width: 16%;">Jumlah Data Kelas</th>
-                            <th style="width: 12%;">Jumlah Opsi</th>
-                            <th style="width: 26%;">Likelihood</th>
+                            <th style="width: 22%;">Kriteria</th>
+                            <th style="width: 14%;">Input</th>
+                            <th style="width: 16%;">Mean</th>
+                            <th style="width: 16%;">Variance</th>
+                            <th style="width: 32%;">Density</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -159,10 +157,9 @@
                             <tr>
                                 <td>{{ $attribute['criterion_name'] }}</td>
                                 <td>{{ $attribute['input_value'] }}</td>
-                                <td>{{ $attribute['match_count'] }}</td>
-                                <td>{{ $attribute['class_count'] }}</td>
-                                <td>{{ $attribute['option_count'] }}</td>
-                                <td>{{ $attribute['formula'] }} = {{ $attribute['likelihood'] }}</td>
+                                <td>{{ $attribute['mean'] }}</td>
+                                <td>{{ $attribute['variance'] }}</td>
+                                <td>{{ $attribute['density'] }}</td>
                             </tr>
                         @endforeach
                     </tbody>

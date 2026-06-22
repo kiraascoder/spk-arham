@@ -11,28 +11,28 @@ class CriterionSeeder extends Seeder
     {
         $criteria = [
             [
-                'code' => 'warna_daun',
-                'name' => 'Warna Daun',
-                'input_type' => 'category',
-                'description' => 'Kriteria warna daun bibit kangkung',
-            ],
-            [
-                'code' => 'tinggi_tanaman',
-                'name' => 'Tinggi Tanaman',
-                'input_type' => 'category',
-                'description' => 'Kriteria tinggi tanaman kangkung',
+                'code' => 'tinggi_tanaman_cm',
+                'name' => 'Tinggi Tanaman (cm)',
+                'input_type' => 'number',
+                'description' => 'Tinggi bibit kangkung dalam centimeter',
             ],
             [
                 'code' => 'jumlah_daun',
                 'name' => 'Jumlah Daun',
-                'input_type' => 'category',
-                'description' => 'Kriteria jumlah daun bibit kangkung',
+                'input_type' => 'number',
+                'description' => 'Jumlah daun bibit kangkung dalam helai',
             ],
             [
-                'code' => 'ketahanan_hama',
-                'name' => 'Ketahanan Hama',
-                'input_type' => 'category',
-                'description' => 'Kriteria ketahanan terhadap hama',
+                'code' => 'panjang_daun_cm',
+                'name' => 'Panjang Daun Rata-rata (cm)',
+                'input_type' => 'number',
+                'description' => 'Panjang rata-rata daun bibit kangkung dalam centimeter',
+            ],
+            [
+                'code' => 'persentase_serangan_hama',
+                'name' => 'Persentase Serangan Hama (%)',
+                'input_type' => 'number',
+                'description' => 'Persentase daun yang terserang hama',
             ],
         ];
 

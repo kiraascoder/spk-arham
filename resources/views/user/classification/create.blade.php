@@ -10,12 +10,9 @@
             @foreach ($criteria as $criterion)
                 <div class="form-group">
                     <label class="form-label">{{ $criterion->name }}</label>
-                    <select name="criteria[{{ $criterion->id }}]" class="form-control">
-                        <option value="">-- Pilih {{ $criterion->name }} --</option>
-                        @foreach ($criterion->options as $option)
-                            <option value="{{ $option->option_label }}">{{ $option->option_label }}</option>
-                        @endforeach
-                    </select>
+                    <input type="number" step="0.01" name="criteria[{{ $criterion->id }}]" class="form-control"
+                        placeholder="Masukkan {{ strtolower($criterion->name) }}"
+                        value="{{ old('criteria.' . $criterion->id) }}">
                 </div>
             @endforeach
 
