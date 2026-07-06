@@ -23,16 +23,16 @@ class NaiveBayesService
         $classes = ['unggul', 'tidak_unggul'];
         $totalSamples = $trainingSamples->count();
 
-        $logResults = [];
+        $logPosteriorResults = [];
         $calculationDetails = [];
 
-        foreach ($classes as $class) {
-            $classSamples = $trainingSamples->where('class_label', $class);
+        foreach ($classes as $className) {
+            $classSamples = $trainingSamples->where('class_label', $className);
             $classCount = $classSamples->count();
 
             if ($classCount === 0) {
-                $logResults[$class] = log(1e-300);
-                $calculationDetails[$class] = [
+                $logPosteriorResults[$className] = log(1e-300);
+                $calculationDetails[$className] = [
                     'prior' => 0,
                     'posterior' => 0,
                     'attributes' => [],
@@ -40,35 +40,70 @@ class NaiveBayesService
                 continue;
             }
 
-            $prior = $classCount / $totalSamples;
-            $logPosterior = log($prior);
+            /**
+             * RUMUS PRIOR:
+             * P(Ck) = jumlah data pada kelas / jumlah seluruh data
+             */
+            $priorProbability = $classCount / $totalSamples;
+
+            /**
+             * RUMUS POSTERIOR (bentuk asli):
+             * P(Ck|X) ∝ P(Ck) × Π P(x_i|Ck)
+             *
+             * Dalam implementasi dipakai log agar numerik stabil:
+             * log P(Ck|X) = log P(Ck) + Σ log P(x_i|Ck)
+             */
+            $logPosterior = log($priorProbability);
+
             $attributeDetails = [];
 
             foreach ($inputData as $criterionId => $inputValue) {
-                $values = [];
+                $trainingValues = [];
 
                 foreach ($classSamples as $sample) {
                     $detail = $sample->details->firstWhere('criterion_id', (int) $criterionId);
 
                     if ($detail && $detail->numeric_value !== null) {
-                        $values[] = (float) $detail->numeric_value;
+                        $trainingValues[] = (float) $detail->numeric_value;
                     }
                 }
 
                 $criterion = Criterion::find($criterionId);
                 $criterionName = $criterion ? $criterion->name : 'Kriteria';
 
-                $mean = $this->mean($values);
-                $variance = $this->variance($values, $mean);
+                /**
+                 * RUMUS MEAN:
+                 * μ = Σx / n
+                 */
+                $mean = $this->calculateMean($trainingValues);
+
+                /**
+                 * RUMUS VARIANCE:
+                 * σ² = Σ(x - μ)² / n
+                 */
+                $variance = $this->calculateVariance($trainingValues, $mean);
 
                 if ($variance <= 0) {
                     $variance = 1e-6;
                 }
 
-                $density = $this->gaussianPdf((float) $inputValue, $mean, $variance);
-                $density = max($density, 1e-300);
+                /**
+                 * RUMUS GAUSSIAN PDF:
+                 * P(x|Ck) = 1 / √(2πσ²) × exp( - (x - μ)² / (2σ²) )
+                 */
+                $gaussianLikelihood = $this->calculateGaussianPdf(
+                    (float) $inputValue,
+                    $mean,
+                    $variance
+                );
 
-                $logPosterior += log($density);
+                $gaussianLikelihood = max($gaussianLikelihood, 1e-300);
+
+                /**
+                 * Menambahkan log likelihood ke log posterior
+                 * log P(Ck|X) = log P(Ck) + Σ log P(x_i|Ck)
+                 */
+                $logPosterior += log($gaussianLikelihood);
 
                 $attributeDetails[] = [
                     'criterion_id' => $criterionId,
@@ -76,37 +111,47 @@ class NaiveBayesService
                     'input_value' => (float) $inputValue,
                     'mean' => $mean,
                     'variance' => $variance,
-                    'density' => $density,
+                    'density' => $gaussianLikelihood,
                 ];
             }
 
-            $logResults[$class] = $logPosterior;
+            $logPosteriorResults[$className] = $logPosterior;
 
-            $calculationDetails[$class] = [
-                'prior' => $prior,
+            $calculationDetails[$className] = [
+                'prior' => $priorProbability,
                 'log_posterior' => $logPosterior,
                 'attributes' => $attributeDetails,
             ];
         }
 
-        $probabilities = $this->softmax($logResults);
+        /**
+         * Normalisasi hasil log posterior menjadi probabilitas
+         */
+        $normalizedProbabilities = $this->softmax($logPosteriorResults);
 
-        $predictedClass = ($probabilities['unggul'] >= $probabilities['tidak_unggul'])
+        /**
+         * Memilih kelas dengan probabilitas terbesar
+         */
+        $predictedClass = ($normalizedProbabilities['unggul'] >= $normalizedProbabilities['tidak_unggul'])
             ? 'unggul'
             : 'tidak_unggul';
 
-        $calculationDetails['unggul']['posterior'] = $probabilities['unggul'];
-        $calculationDetails['tidak_unggul']['posterior'] = $probabilities['tidak_unggul'];
+        $calculationDetails['unggul']['posterior'] = $normalizedProbabilities['unggul'];
+        $calculationDetails['tidak_unggul']['posterior'] = $normalizedProbabilities['tidak_unggul'];
 
         return [
             'predicted_class' => $predictedClass,
-            'probability_unggul' => $probabilities['unggul'],
-            'probability_tidak_unggul' => $probabilities['tidak_unggul'],
+            'probability_unggul' => $normalizedProbabilities['unggul'],
+            'probability_tidak_unggul' => $normalizedProbabilities['tidak_unggul'],
             'calculation_details' => $calculationDetails,
         ];
     }
 
-    private function mean(array $values): float
+    /**
+     * RUMUS MEAN:
+     * μ = Σx / n
+     */
+    private function calculateMean(array $values): float
     {
         if (count($values) === 0) {
             return 0;
@@ -115,42 +160,54 @@ class NaiveBayesService
         return array_sum($values) / count($values);
     }
 
-    private function variance(array $values, float $mean): float
+    /**
+     * RUMUS VARIANCE:
+     * σ² = Σ(x - μ)² / n
+     */
+    private function calculateVariance(array $values, float $mean): float
     {
         if (count($values) === 0) {
             return 1e-6;
         }
 
-        $sum = 0;
+        $sumOfSquaredDifferences = 0;
+
         foreach ($values as $value) {
-            $sum += pow($value - $mean, 2);
+            $sumOfSquaredDifferences += pow($value - $mean, 2);
         }
 
-        return $sum / count($values);
+        return $sumOfSquaredDifferences / count($values);
     }
 
-    private function gaussianPdf(float $x, float $mean, float $variance): float
+    /**
+     * RUMUS GAUSSIAN PDF:
+     * P(x|Ck) = 1 / √(2πσ²) × exp( - (x - μ)² / (2σ²) )
+     */
+    private function calculateGaussianPdf(float $x, float $mean, float $variance): float
     {
-        $coefficient = 1 / sqrt(2 * pi() * $variance);
-        $exponent = exp(-pow($x - $mean, 2) / (2 * $variance));
+        $frontPart = 1 / sqrt(2 * pi() * $variance);
+        $exponentPart = exp(-pow($x - $mean, 2) / (2 * $variance));
 
-        return $coefficient * $exponent;
+        return $frontPart * $exponentPart;
     }
 
+    /**
+     * Normalisasi log posterior menjadi probabilitas akhir
+     */
     private function softmax(array $logValues): array
     {
-        $maxLog = max($logValues);
+        $maxLogValue = max($logValues);
         $expValues = [];
 
-        foreach ($logValues as $class => $value) {
-            $expValues[$class] = exp($value - $maxLog);
+        foreach ($logValues as $className => $value) {
+            $expValues[$className] = exp($value - $maxLogValue);
         }
 
-        $sumExp = array_sum($expValues);
+        $sumExpValues = array_sum($expValues);
 
         return [
-            'unggul' => $expValues['unggul'] / $sumExp,
-            'tidak_unggul' => $expValues['tidak_unggul'] / $sumExp,
+            'unggul' => $expValues['unggul'] / $sumExpValues,
+            'tidak_unggul' => $expValues['tidak_unggul'] / $sumExpValues,
         ];
     }
 }
