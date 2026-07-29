@@ -1,9 +1,72 @@
 <!DOCTYPE html>
 <html lang="id">
+
 <head>
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ $title ?? 'Sistem Bibit Kangkung' }}</title>
+
+    {{-- Judul halaman --}}
+    <title>
+        @yield('title', $title ?? 'Sistem Pemilihan Bibit Unggul Tanaman Kangkung')
+    </title>
+
+    {{-- Deskripsi halaman --}}
+    <meta name="description" content="@yield('meta_description', 'Sistem berbasis web untuk membantu menentukan bibit unggul tanaman kangkung menggunakan metode Gaussian Naive Bayes.')">
+
+    <meta name="keywords" content="@yield('meta_keywords', 'bibit kangkung, bibit unggul kangkung, Gaussian Naive Bayes, pemilihan bibit kangkung, klasifikasi bibit kangkung')">
+
+    <meta name="author" content="Arham">
+    <meta name="language" content="Indonesia">
+
+    {{-- Beranda boleh diindeks, halaman sistem tidak perlu diindeks --}}
+    @if (request()->routeIs('home'))
+        <meta name="robots" content="index, follow">
+    @else
+        <meta name="robots" content="noindex, nofollow">
+    @endif
+
+    {{-- URL utama halaman --}}
+    <link rel="canonical" href="@yield('canonical', url()->current())">
+
+    {{-- Open Graph --}}
+    <meta property="og:title" content="@yield('title', $title ?? 'Sistem Pemilihan Bibit Unggul Tanaman Kangkung')">
+
+    <meta property="og:description" content="@yield('meta_description', 'Sistem pemilihan bibit unggul tanaman kangkung menggunakan metode Gaussian Naive Bayes.')">
+
+    <meta property="og:type" content="website">
+    <meta property="og:locale" content="id_ID">
+    <meta property="og:site_name" content="Sistem Bibit Kangkung">
+    <meta property="og:url" content="@yield('canonical', url()->current())">
+
+    {{-- Informasi ketika dibagikan ke media sosial --}}
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="@yield('title', $title ?? 'Sistem Pemilihan Bibit Unggul Tanaman Kangkung')">
+
+    <meta name="twitter:description" content="@yield('meta_description', 'Sistem pemilihan bibit unggul tanaman kangkung menggunakan metode Gaussian Naive Bayes.')">
+
+    {{-- Structured Data khusus halaman beranda --}}
+    @if (request()->routeIs('home'))
+        <script type="application/ld+json">
+            {!! json_encode([
+                '@context' => 'https://schema.org',
+                '@type' => 'WebApplication',
+                'name' => 'Sistem Pemilihan Bibit Unggul Tanaman Kangkung',
+                'url' => route('home'),
+                'description' => 'Sistem berbasis web untuk membantu menentukan bibit unggul tanaman kangkung menggunakan metode Gaussian Naive Bayes.',
+                'applicationCategory' => 'EducationalApplication',
+                'operatingSystem' => 'Web Browser',
+                'inLanguage' => 'id-ID',
+                'author' => [
+                    '@type' => 'Person',
+                    'name' => 'Arham',
+                ],
+            ], JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE | JSON_PRETTY_PRINT) !!}
+        </script>
+    @endif
+
+    @stack('structured-data')
+
     <style>
         * {
             margin: 0;
@@ -68,7 +131,7 @@
             background: white;
             border-radius: 14px;
             padding: 40px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
         }
 
         .hero h1 {
@@ -118,7 +181,7 @@
             background: white;
             padding: 30px;
             border-radius: 14px;
-            box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
             max-width: 420px;
             margin: 50px auto;
         }
@@ -156,9 +219,17 @@
             text-align: center;
         }
 
-        .mt-2 { margin-top: 8px; }
-        .mt-3 { margin-top: 16px; }
-        .mt-4 { margin-top: 24px; }
+        .mt-2 {
+            margin-top: 8px;
+        }
+
+        .mt-3 {
+            margin-top: 16px;
+        }
+
+        .mt-4 {
+            margin-top: 24px;
+        }
 
         .footer {
             text-align: center;
@@ -178,7 +249,7 @@
             background: #ffffff;
             padding: 20px;
             border-radius: 12px;
-            box-shadow: 0 4px 14px rgba(0,0,0,0.05);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.05);
         }
 
         .feature-item h3 {
@@ -209,17 +280,20 @@
         }
     </style>
 </head>
-<body>
 
+<body>
     @include('partials.navbar')
 
     <main class="container">
         @yield('content')
     </main>
 
-    <div class="footer">
-        &copy; {{ date('Y') }} Sistem Pemilihan Bibit Unggul Kangkung
-    </div>
-
+    <footer class="footer">
+        <p>
+            &copy; {{ date('Y') }}
+            Sistem Pemilihan Bibit Unggul Tanaman Kangkung
+        </p>
+    </footer>
 </body>
+
 </html>
