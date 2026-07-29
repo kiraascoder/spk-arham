@@ -36,7 +36,7 @@
                                 @csrf
                                 @method('DELETE')
                                 <button type="submit" class="btn"
-                                    style="border:1px solid #dc2626; color:#dc2626; background:white;">
+                                    style="border:1px solid #ff0000; color:#dc2626; background:white;">
                                     Hapus
                                 </button>
                             </form>

@@ -8,6 +8,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Password;
 use Illuminate\View\View;
 
+
 class ForgotPasswordController extends Controller
 {
     public function create(): View
@@ -15,7 +16,7 @@ class ForgotPasswordController extends Controller
         return view('auth.forgot-password');
     }
 
-    public function store(Request $request): RedirectResponse
+        public function store(Request $request): RedirectResponse
     {
         $request->validate([
             'email' => ['required', 'email'],
@@ -25,10 +26,31 @@ class ForgotPasswordController extends Controller
             $request->only('email')
         );
 
-        return $status === Password::RESET_LINK_SENT
-            ? back()->with('status', 'Link reset password berhasil dikirim ke email Anda.')
-            : back()->withErrors([
-                'email' => 'Email tidak ditemukan atau gagal mengirim link reset.',
-            ])->onlyInput('email');
+        if ($status === Password::RESET_LINK_SENT) {
+            return back()->with(
+                'status',
+                'Link reset password berhasil dikirim. Silakan periksa kotak masuk atau folder spam.'
+            );
+        }
+
+        $message = match ($status) {
+            Password::INVALID_USER =>
+                'Email tersebut belum terdaftar pada sistem.',
+
+            Password::RESET_THROTTLED =>
+                'Permintaan reset terlalu sering. Silakan tunggu sekitar 60 detik lalu coba kembali.',
+
+            default =>
+                'Link reset password gagal dikirim. Silakan coba kembali.',
+        };
+
+        logger()->warning('Pengiriman link reset password gagal.', [
+            'email' => $request->email,
+            'status' => $status,
+        ]);
+
+        return back()
+            ->withErrors(['email' => $message])
+            ->onlyInput('email');
     }
 }
